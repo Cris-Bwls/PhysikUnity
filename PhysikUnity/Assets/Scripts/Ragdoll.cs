@@ -6,16 +6,24 @@ using UnityEngine;
 public class Ragdoll : MonoBehaviour
 {
 	private Animator animator = null;
+	private CharacterController charContoller= null;
 	public List<Rigidbody> rigidbodies = new List<Rigidbody>();
 	public bool RagdollOn
 	{
 		get { return !animator.enabled; }
-		set { animator.enabled = !value; foreach (Rigidbody r in rigidbodies) r.isKinematic = !value; }
+		set
+		{
+			charContoller.enabled = !value;
+			animator.enabled = !value;
+			foreach (Rigidbody r in rigidbodies)
+				r.isKinematic = !value;
+		}
 	}
 
 	// Use this for initialization 
 	void Start()
 	{
+		charContoller = GetComponent<CharacterController>();
 		animator = GetComponent<Animator>();
 		foreach (Rigidbody r in rigidbodies)
 			r.isKinematic = true;

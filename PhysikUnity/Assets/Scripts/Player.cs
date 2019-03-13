@@ -4,16 +4,18 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class Player : MonoBehaviour
 {
+	public Transform[] feet;
     CharacterController controller = null;
     Animator animator = null;
-    public float speed = 80.0f;
-    public float pushPower = 2.0f;
+	Ragdoll ragdoll = null;
+    public float speed = 20.0f;
 
     // Use this for initialization 
     void Start ()
     {
         controller = GetComponent<CharacterController>();
         animator = GetComponent<Animator>();
+		ragdoll = GetComponent<Ragdoll>();
     }
 
     // Update is called once per frame 
@@ -21,19 +23,30 @@ public class Player : MonoBehaviour
     {
         float vertical = Input.GetAxis("Vertical");
         float horizontal = Input.GetAxis("Horizontal");
-        controller.SimpleMove( transform.forward * vertical * speed * Time.deltaTime);
-        transform.Rotate(transform.up, horizontal * speed * Time.deltaTime);
-    }
 
-    void OnControllerColliderHit(ControllerColliderHit hit)
-    {
-        Rigidbody body = hit.collider.attachedRigidbody;
+		if (animator.parameterCount > 0)
+		{
+			if (animator.parameters[0].type == AnimatorControllerParameterType.Float)
+			{
+				int id = animator.parameters[0].nameHash;
+				animator.SetFloat(id, vertical * 2);
+			}
+		}
 
-        if (body == null || body.isKinematic)
-            return;
-        if (hit.moveDirection.y < -0.3F)
-            return;
+		var pos = transform.position;
+		Physics.Raycast(pos, Vector3.down, 1.0f);
+		if (!Physics.Raycast(pos, Vector3.down, 1.0f))
+		{
+			ragdoll.RagdollOn = true;
+		}
 
-        Vector3 pushDir = new Vector3(hit.moveDirection.x, 0, hit.moveDirection.z); body.velocity = pushDir * pushPower;
+		if (controller.enabled)
+		{
+			var rot = speed;
+			if (vertical < 0)
+				rot *= -1;
+			transform.Rotate(transform.up, horizontal * rot * Time.deltaTime);
+			controller.SimpleMove(Physics.gravity);
+		}
     }
 }
